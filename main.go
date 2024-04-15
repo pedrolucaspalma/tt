@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -8,9 +9,28 @@ import (
 	"time"
 )
 
+type CommandUsage struct {
+	sessionId   string
+	mainCommand string
+	startTime   string
+	closeTime   string
+	fullCommand string
+}
+
 func main() {
 	var commands []string = os.Args[1:]
 
+	if len(commands) > 0 {
+		RegisterCommand(commands)
+	} else {
+		GetReport()
+	}
+}
+
+func GetReport() {
+	fmt.Println("Read execution")
+}
+func RegisterCommand(commands []string) {
 	if len(commands) < 1 {
 		log.Fatal("No command found")
 	}
@@ -43,7 +63,14 @@ func main() {
 
 	closeTime := getNow()
 
-	sessionString := generateString(string(sessionId), commands[0], startTime, closeTime, fullCommandString)
+	sessionData := CommandUsage{
+		sessionId:   string(sessionId),
+		mainCommand: commands[0],
+		startTime:   startTime,
+		closeTime:   closeTime,
+		fullCommand: fullCommandString,
+	}
+	sessionString := generateString(sessionData)
 
 	_, err = registrationFilePtr.WriteString(sessionString)
 	if err != nil {
@@ -75,6 +102,6 @@ func getOrCreateRegistrationFile() (filePtr *os.File, err error) {
 	return file, nil
 }
 
-func generateString(sessionId string, command string, start string, end string, fullCommandString string) string {
-	return sessionId + "," + command + "," + start + "," + end + "," + fullCommandString + ";" + "\n"
+func generateString(sessionData CommandUsage) string {
+	return sessionData.sessionId + "," + sessionData.mainCommand + "," + sessionData.startTime + "," + sessionData.closeTime + "," + sessionData.fullCommand + ";" + "\n"
 }
