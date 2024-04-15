@@ -21,23 +21,23 @@ func main() {
 	var commands []string = os.Args[1:]
 
 	if len(commands) > 0 {
-		RegisterCommand(commands)
+		err := RegisterCommand(commands)
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		GetReport()
 	}
 }
 
-func GetReport() {
+func GetReport() error {
 	fmt.Println("Read execution")
+	return nil
 }
-func RegisterCommand(commands []string) {
-	if len(commands) < 1 {
-		log.Fatal("No command found")
-	}
-
+func RegisterCommand(commands []string) error {
 	sessionId, err := exec.Command("uuidgen").Output()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	// removing \n from uuid
 	sessionId = sessionId[:len(sessionId)-1]
@@ -50,7 +50,7 @@ func RegisterCommand(commands []string) {
 
 	registrationFilePtr, err := getOrCreateRegistrationFile()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer registrationFilePtr.Close()
 
@@ -59,7 +59,10 @@ func RegisterCommand(commands []string) {
 
 	startTime := getNow()
 
-	cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
 
 	closeTime := getNow()
 
@@ -74,8 +77,9 @@ func RegisterCommand(commands []string) {
 
 	_, err = registrationFilePtr.WriteString(sessionString)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
 func getNow() string {
