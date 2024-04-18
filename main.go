@@ -20,21 +20,56 @@ type CommandUsage struct {
 func main() {
 	var commands []string = os.Args[1:]
 
+	ttPtr, err := GetTt()
+	if err != nil {
+		log.Fatal(err)
+	}
 	if len(commands) > 0 {
-		err := RegisterCommand(commands)
+		err := ttPtr.RegisterCommand(commands)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		GetReport()
+		ttPtr.GetReport()
 	}
 }
 
-func GetReport() error {
+func (tt *Tt) GetReport() error {
 	fmt.Println("Read execution")
 	return nil
 }
-func RegisterCommand(commands []string) error {
+
+type Tt struct {
+	TtConfigFilePath     string
+	RegistrationFilePath string
+
+	currentWorkingDirectoryPath string
+}
+
+func GetTt() (*Tt, error) {
+	currentWorkingDirectoryPath, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	ttConfigFileName := "/tt_config.json"
+	ttConfigFilePath := currentWorkingDirectoryPath + ttConfigFileName
+
+	registrationFilePath := currentWorkingDirectoryPath + "/tt.csv"
+
+	tt := Tt{
+		TtConfigFilePath:            ttConfigFilePath,
+		RegistrationFilePath:        registrationFilePath,
+		currentWorkingDirectoryPath: currentWorkingDirectoryPath,
+	}
+
+	fmt.Println(tt)
+
+	fmt.Println("Current Working Directory: ", currentWorkingDirectoryPath)
+	return &tt, nil
+}
+
+func (tt *Tt) RegisterCommand(commands []string) error {
 	sessionId, err := exec.Command("uuidgen").Output()
 	if err != nil {
 		return err
@@ -48,7 +83,7 @@ func RegisterCommand(commands []string) error {
 		fullCommandString += " " + command
 	}
 
-	registrationFilePtr, err := getOrCreateRegistrationFile()
+	registrationFilePtr, err := tt.getOrCreateRegistrationFile()
 	if err != nil {
 		return err
 	}
@@ -82,12 +117,8 @@ func RegisterCommand(commands []string) error {
 	return nil
 }
 
-func getNow() string {
-	return strconv.FormatInt(time.Now().UnixMilli(), 10)
-}
-
-func getOrCreateRegistrationFile() (filePtr *os.File, err error) {
-	filePath := "/home/pedro/tt.csv"
+func (tt *Tt) getOrCreateRegistrationFile() (filePtr *os.File, err error) {
+	filePath := tt.currentWorkingDirectoryPath + "/tt.csv"
 
 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND, 0644)
 
@@ -108,4 +139,8 @@ func getOrCreateRegistrationFile() (filePtr *os.File, err error) {
 
 func generateString(sessionData CommandUsage) string {
 	return sessionData.sessionId + "," + sessionData.mainCommand + "," + sessionData.startTime + "," + sessionData.closeTime + "," + sessionData.fullCommand + ";" + "\n"
+}
+
+func getNow() string {
+	return strconv.FormatInt(time.Now().UnixMilli(), 10)
 }
