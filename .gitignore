@@ -22,5 +22,5 @@ go.work
 
 main
 tt
-tt.json
+tt_ignore.json
 tt.csv
