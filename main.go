@@ -52,7 +52,7 @@ func GetTt() (*Tt, error) {
 		return nil, err
 	}
 
-	ttConfigFileName := "/tt_config.json"
+	ttConfigFileName := "tt.json"
 	ttConfigFilePath := currentWorkingDirectoryPath + ttConfigFileName
 
 	registrationFilePath := currentWorkingDirectoryPath + "/tt.csv"
@@ -117,6 +117,10 @@ func (tt *Tt) RegisterCommand(commands []string) error {
 	return nil
 }
 
+func getNow() string {
+	return strconv.FormatInt(time.Now().UnixMilli(), 10)
+}
+
 func (tt *Tt) getOrCreateRegistrationFile() (filePtr *os.File, err error) {
 	filePath := tt.currentWorkingDirectoryPath + "/tt.csv"
 
@@ -139,8 +143,4 @@ func (tt *Tt) getOrCreateRegistrationFile() (filePtr *os.File, err error) {
 
 func generateString(sessionData CommandUsage) string {
 	return sessionData.sessionId + "," + sessionData.mainCommand + "," + sessionData.startTime + "," + sessionData.closeTime + "," + sessionData.fullCommand + ";" + "\n"
-}
-
-func getNow() string {
-	return strconv.FormatInt(time.Now().UnixMilli(), 10)
 }
